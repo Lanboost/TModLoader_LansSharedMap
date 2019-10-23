@@ -1,0 +1,3 @@
+displayName = Lans Shared Map
+author = Lanboost
+version = 0.1
