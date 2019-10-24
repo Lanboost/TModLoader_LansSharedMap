@@ -1,5 +1,2 @@
-LansSharedMap is a WAY non optimal mod that sends each tile update to all clients so the map can be shared.
-
-This should actually be done locally with lightning calculations, however I am lazy, so use at own RISK!!!
-
-This will increase bandwidth usage by quite a bit!!!!
+Shares exploration with all other players on the server! 
+NOTE: Actually sends the explored data on the network, could be done locally but I am lazy.

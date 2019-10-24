@@ -1,3 +1,6 @@
-displayName = Lans Shared Map
+displayName = Lan's Shared Map
 author = Lanboost
 version = 0.1
+includePDB = true
+includeSource = true
+homepage = https://github.com/Lanboost/TModLoader_LansSharedMap
