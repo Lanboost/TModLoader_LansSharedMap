@@ -4,7 +4,7 @@ NOTE: Actually sends the explored data on the network, could be done locally but
 
 
 # Other TModLoader mods by me:
- * [Lanboosts Auto Join Team](https://github.com/Lanboost/TModLoader_LansAutoJoinTeam)
+* [Lanboosts Auto Join Team](https://github.com/Lanboost/TModLoader_LansAutoJoinTeam)
   * Automatically joins the red team whenever you play terraria, perfect for lazy people!
 * [Lanboosts Auto Summon](https://github.com/Lanboost/TModLoader_LansAutoSummon)
   * Automatically summons whatever is in hotkey slot 9, perfect for lazy people!
@@ -28,5 +28,7 @@ NOTE: Actually sends the explored data on the network, could be done locally but
   * Purchaseable permenant toggleable buffs, no more potion farming and afraid of dying!
 * [Lanboosts Toggleable Buffs Calamity](https://github.com/Lanboost/TModLoader_LansToggleableBuffsCalamity)
   * Extension of the mod Lan's Toggleable Buffs but for the mod Calamity!
+* [Lanboosts Uncraft Items](https://github.com/Lanboost/TModLoader_LansUncraftItems)
+  * Make you able to uncraft items, meaning you will destroy the item and get the resource back (or a % of it), this is done with the hammer button to the right of inventory!
 
  Contact me by issues for questions!
