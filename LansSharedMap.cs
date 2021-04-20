@@ -9,36 +9,41 @@ using Terraria.ModLoader;
 
 namespace LansSharedMap
 {
-
-	public struct WorldMapTile
+	
+	public class Position
 	{
 		public int x;
 		public int y;
-		public int type;
-		public int lightning;
-		public int extra;
 
-		public WorldMapTile(int x, int y, int type, int lightning, int extra)
+		public Position(int x, int y)
 		{
 			this.x = x;
 			this.y = y;
-			this.type = type;
-			this.lightning = lightning;
-			this.extra = extra;
 		}
 	}
 
 	public class LansSharedMap : Mod
 	{
-		Queue<WorldMapTile> updates = new Queue<WorldMapTile>();
+		Queue<Position> updates = new Queue<Position>();
 
-		WorldMapTile[,] sentMap = new WorldMapTile[Main.maxTilesX, Main.maxTilesY];
-		bool[,] loadedMap = new bool[Main.maxTilesX, Main.maxTilesY];
+		//ushort[][] sentMapType;
+		//byte[][] sentMapLight;
+		//byte[][] sentMapColor;
+		//bool[][] loadedMap;
 
 		public LansSharedMap()
 		{
-
-			
+			/*sentMapType = new ushort[Main.maxTilesY][];
+			sentMapLight = new byte[Main.maxTilesY][];
+			sentMapColor = new byte[Main.maxTilesY][];*/
+			//loadedMap = new bool[Main.maxTilesY][];
+			//for (int y = 0; y < Main.maxTilesY; y++)
+			//{
+				//sentMapType[y] = new ushort[Main.maxTilesX];
+				//sentMapLight[y] = new byte[Main.maxTilesX];
+				//sentMapColor[y] = new byte[Main.maxTilesX];
+				//loadedMap[y] = new bool[Main.maxTilesX];
+			//}
 		}
 
 		public override void Load()
@@ -66,40 +71,16 @@ namespace LansSharedMap
 				
 
 				MapTile t = Main.Map[x, y];
-				var newTile = new WorldMapTile(x, y, t.Type, t.Light, t.Color);
-				if (!loadedMap[x,y])
+
+				if(updates.Count < 100000)
 				{
-					loadedMap[x, y] = true;
-					sentMap[x, y] = newTile;
+					var newTile = new Position(x, y);
 					updates.Enqueue(newTile);
-					//this.Logger.Warn("Added maptile" + x + "," + y);
 				}
-				else
-				{
-					var oldTile = sentMap[x, y];
-					if (isWorldMapTileDifferent(newTile, oldTile))
-					{
-						sentMap[x, y] = newTile;
-						updates.Enqueue(newTile);
-						//this.Logger.Warn("Added maptile" + x + "," + y);
-					}
-					else
-					{
-						//this.Logger.Warn("Skipped maptile" + x + "," + y);
-					}
-				}
+				
 			}
 		}
-
-		bool isWorldMapTileDifferent(WorldMapTile first, WorldMapTile second)
-		{
-			return first.type != second.type || first.lightning != second.lightning || first.extra != second.extra;
-		}
-
-
-
-
-
+		
 		public override void PostUpdateEverything()
 		{
 			base.PostUpdateEverything();
@@ -120,9 +101,10 @@ namespace LansSharedMap
 					var t = updates.Dequeue();
 					packet.Write((int)t.x);
 					packet.Write((int)t.y);
-					packet.Write((ushort)t.type);
-					packet.Write((byte)t.lightning);
-					packet.Write((byte)t.extra);
+					var mapTile = Main.Map[t.x, t.y];
+					packet.Write((ushort)mapTile.Type);
+					packet.Write((byte)mapTile.Light);
+					packet.Write((byte)mapTile.Color);
 						
 				}
 
@@ -185,14 +167,12 @@ namespace LansSharedMap
 								byte _extra = reader.ReadByte();
 
 								var tile = MapTile.Create(type, light, _extra);
-								Main.Map.SetTile(x, y, ref tile);
-								var result = MyUpdateMapTile(x, y, true);
-								//this.Logger.Warn("Update x:"+x+" y:"+y+" v:"+ result);
-
-								MapTile t = Main.Map[x, y];
-								var newTile = new WorldMapTile(x, y, t.Type, t.Light, t.Color);
-								loadedMap[x, y] = true;
-								sentMap[x, y] = newTile;
+								if (isWorldMapTileDifferent(Main.Map[x, y], tile)) {
+									Main.Map.SetTile(x, y, ref tile);
+									var result = MyUpdateMapTile(x, y, true);
+									//this.Logger.Warn("Update x:"+x+" y:"+y+" v:"+ result);
+									
+								}
 							}
 							
 						}
@@ -200,6 +180,11 @@ namespace LansSharedMap
 						break;
 					}
 			}
+		}
+
+		bool isWorldMapTileDifferent(MapTile first, MapTile second)
+		{
+			return first.Type != second.Type || first.Light != second.Light || first.Color != second.Color;
 		}
 
 		public static bool MyUpdateMapTile(int i, int j, bool addToList = true)
