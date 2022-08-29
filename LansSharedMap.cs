@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.Map;
 using Terraria.ModLoader;
+using static LansSharedMap.LansSharedMap;
 
 namespace LansSharedMap
 {
@@ -21,106 +22,85 @@ namespace LansSharedMap
 			this.y = y;
 		}
 	}
+	public class LansSharedMapSystem : ModSystem
+	{
+        Queue<Position> updates = new Queue<Position>();
+
+        public override void Load()
+        {
+            IL.Terraria.Map.WorldMap.ConsumeUpdate += AddOnConsumeUpdateMap;
+        }
+
+        public void AddOnConsumeUpdateMap(ILContext il)
+        {
+            var c = new ILCursor(il);
+            c.Emit(Mono.Cecil.Cil.OpCodes.Ldarg_1);
+
+            c.Emit(Mono.Cecil.Cil.OpCodes.Ldarg_2);
+
+            c.EmitDelegate<Action<int, int>>(delegate (int x, int y) {
+                onConsumeUpdateMap(x, y);
+            });
+
+        }
+
+        void onConsumeUpdateMap(int x, int y)
+        {
+            if (Main.netMode != NetmodeID.SinglePlayer && Main.netMode != NetmodeID.Server)
+            {
+
+
+                MapTile t = Main.Map[x, y];
+
+                if (updates.Count < 100000)
+                {
+                    var newTile = new Position(x, y);
+                    updates.Enqueue(newTile);
+                }
+
+            }
+        }
+
+        public override void PostUpdateEverything()
+        {
+            base.PostUpdateEverything();
+
+
+
+            while (updates.Count > 0)
+            {
+                var maxUpdates = Math.Min(1000, updates.Count);
+                int length = 2 + 4 + maxUpdates * 12;
+                var packet = Mod.GetPacket(length);
+                packet.Write((byte)LansSharedMapModMessageType.MapUpdate);
+                packet.Write((byte)Main.myPlayer);
+                packet.Write((int)length);
+
+                for (var i = 0; i < maxUpdates; i++)
+                {
+                    var t = updates.Dequeue();
+                    packet.Write((int)t.x);
+                    packet.Write((int)t.y);
+                    var mapTile = Main.Map[t.x, t.y];
+                    packet.Write((ushort)mapTile.Type);
+                    packet.Write((byte)mapTile.Light);
+                    packet.Write((byte)mapTile.Color);
+
+                }
+
+                packet.Send();
+
+                //this.Logger.Warn("Sent " + maxUpdates + " stuff");
+
+            }
+
+        }
+		
+    }
 
 	public class LansSharedMap : Mod
 	{
-		Queue<Position> updates = new Queue<Position>();
-
-		//ushort[][] sentMapType;
-		//byte[][] sentMapLight;
-		//byte[][] sentMapColor;
-		//bool[][] loadedMap;
-
-		public LansSharedMap()
-		{
-			/*sentMapType = new ushort[Main.maxTilesY][];
-			sentMapLight = new byte[Main.maxTilesY][];
-			sentMapColor = new byte[Main.maxTilesY][];*/
-			//loadedMap = new bool[Main.maxTilesY][];
-			//for (int y = 0; y < Main.maxTilesY; y++)
-			//{
-				//sentMapType[y] = new ushort[Main.maxTilesX];
-				//sentMapLight[y] = new byte[Main.maxTilesX];
-				//sentMapColor[y] = new byte[Main.maxTilesX];
-				//loadedMap[y] = new bool[Main.maxTilesX];
-			//}
-		}
-
-		public override void Load()
-		{
-			IL.Terraria.Map.WorldMap.ConsumeUpdate += AddOnConsumeUpdateMap;
-		}
-
-		public void AddOnConsumeUpdateMap(ILContext il)
-		{
-			var c = new ILCursor(il);
-			c.Emit(Mono.Cecil.Cil.OpCodes.Ldarg_1);
-
-			c.Emit(Mono.Cecil.Cil.OpCodes.Ldarg_2);
-
-			c.EmitDelegate<Action<int, int>>(delegate (int x, int y) {
-				onConsumeUpdateMap(x, y);
-			});
-
-		}
-
-		void onConsumeUpdateMap(int x, int y)
-		{
-			if (Main.netMode != NetmodeID.SinglePlayer && Main.netMode != NetmodeID.Server)
-			{
-				
-
-				MapTile t = Main.Map[x, y];
-
-				if(updates.Count < 100000)
-				{
-					var newTile = new Position(x, y);
-					updates.Enqueue(newTile);
-				}
-				
-			}
-		}
 		
-		public override void PostUpdateEverything()
-		{
-			base.PostUpdateEverything();
-
-
-			
-			while (updates.Count > 0)
-			{
-				var maxUpdates = Math.Min(1000, updates.Count);
-				int length = 2 + 4 + maxUpdates * 12;
-				var packet = GetPacket(length);
-				packet.Write((byte)LansSharedMapModMessageType.MapUpdate);
-				packet.Write((byte)Main.myPlayer);
-				packet.Write((int)length);
-
-				for (var i = 0; i < maxUpdates; i++)
-				{
-					var t = updates.Dequeue();
-					packet.Write((int)t.x);
-					packet.Write((int)t.y);
-					var mapTile = Main.Map[t.x, t.y];
-					packet.Write((ushort)mapTile.Type);
-					packet.Write((byte)mapTile.Light);
-					packet.Write((byte)mapTile.Color);
-						
-				}
-
-				packet.Send();
-
-				//this.Logger.Warn("Sent " + maxUpdates + " stuff");
-					
-			}
-				
-		}
-
-
-
-
-
-
 		public override void HandlePacket(BinaryReader reader, int whoAmI)
 		{
 			LansSharedMapModMessageType msgType = (LansSharedMapModMessageType)reader.ReadByte();

@@ -1,2 +1,4 @@
 Shares exploration with all other players on the server! 
 NOTE: Actually sends the explored data on the network, could be done locally but I am lazy.
+
+

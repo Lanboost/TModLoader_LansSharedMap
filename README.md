@@ -2,6 +2,12 @@
  Shares exploration with all other players on the server! 
 NOTE: Actually sends the explored data on the network, could be done locally but I am lazy.
 
+# Change log:
+
+V 2022.08.92:
+
+    - Bump to Alpha 1.4
+
 
 # Other TModLoader mods by me:
 * [Lanboosts Auto Join Team](https://github.com/Lanboost/TModLoader_LansAutoJoinTeam)
